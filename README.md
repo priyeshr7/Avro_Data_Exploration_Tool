@@ -39,3 +39,22 @@ pip install -r requirements.txt
 
 ```--max-records N```  
 
+# Examples
+
+1. Inspect Avro File
+
+``` bash
+python avro_data_tool.py userdata5.avro --inspect
+```
+2. Convert to JSON
+```bash
+python avro_data_tool.py userdata5.avro --to-json output_userdata5.json
+```
+3. Convert to CSV
+```bash
+python avro_data_tool.py userdata5.avro --to-csv output_userdata5.csv
+```
+4. Run Integrity Checks
+```bash
+python avro_data_tool.py userdata5.avro --integrity
+```
