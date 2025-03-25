@@ -19,10 +19,23 @@ pip install -r requirements.txt
 
 ```
 # Options
+- To display file metadata and schema
 
-```--inspect```: Display file metadata and schema
-```--to-json OUTPUT_JSON```: Convert Avro to JSON
-```--to-csv OUTPUT_CSV```: Convert Avro to CSV
-```--integrity```: Run comprehensive integrity checks
-```--max-records N```: Limit number of records processed (default: 10000)
+```--inspect```  
+
+- To convert Avro to JSON format
+
+```--to-json OUTPUT_JSON``` 
+
+- To convert Avro to CSV
+
+```--to-csv OUTPUT_CSV``` 
+
+- To run comprehensive integrity checks
+
+```--integrity``` 
+
+- Limit number of records processed (default: 10000)
+
+```--max-records N```  
 
