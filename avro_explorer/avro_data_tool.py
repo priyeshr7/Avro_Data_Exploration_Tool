@@ -3,25 +3,15 @@ import sys
 import json
 import csv
 import fastavro
-import argparse
 from typing import List, Dict, Any, Optional
 
+
 class AvroDataExplorer:
-    """
-    
-    A comprehensive tool for exploring, inspecting, and converting Avro files to JSON , CSV,.
-    """
-    
-    @staticmethod
-    def inspect_avro_file(file_path: str) -> Dict[str, Any]:
+   
+    def inspect_avro_file(self, file_path: str) -> Dict[str, Any]:
         """
         Inspect an Avro file and return its metadata and schema.
         
-        Args:
-            file_path (str): Path to the Avro file
-        
-        Returns:
-            Dict containing file metadata and schema information
         """
         try:
             with open(file_path, 'rb') as avro_file:
@@ -47,22 +37,19 @@ class AvroDataExplorer:
                     'file_path': file_path,
                     'file_size': os.path.getsize(file_path),
                     'record_count': record_count,
-                    'schema': str(schema),
+                    'schema': schema,
                     'sample_record': first_record
                 }
         
-        except FileNotFoundError as e:
-            print(f"Error: File not found - {file_path}")
-            sys.exit(1)
-        except PermissionError as e:
-            print(f"Error: Permission denied to read the file - {file_path}")
-            sys.exit(1)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File not found: {file_path}")
+        except PermissionError:
+            raise PermissionError(f"Permission denied to read the file: {file_path}")
         except Exception as e:
-            print(f"Error inspecting Avro file: {e}")
-            sys.exit(1)
+            raise Exception(f"Error inspecting Avro file: {e}")
     
-    @staticmethod
     def convert_avro_to_json(
+        self,
         input_file: str, 
         output_file: Optional[str] = None, 
         max_records: int = 10000
@@ -70,13 +57,6 @@ class AvroDataExplorer:
         """
         Convert Avro file to JSON format.
         
-        Args:
-            input_file (str): Path to input Avro file
-            output_file (Optional[str]): Path to output JSON file
-            max_records (int): Maximum number of records to convert
-        
-        Returns:
-            List of records in JSON format
         """
         json_records = []
         
@@ -98,14 +78,12 @@ class AvroDataExplorer:
             return json_records
         
         except FileNotFoundError:
-            print(f"Error: File not found - {input_file}")
-            sys.exit(1)
+            raise FileNotFoundError(f"File not found: {input_file}")
         except Exception as e:
-            print(f"Error converting Avro to JSON: {e}")
-            sys.exit(1)
+            raise Exception(f"Error converting Avro to JSON: {e}")
     
-    @staticmethod
     def convert_avro_to_csv(
+        self,
         input_file: str, 
         output_file: Optional[str] = None, 
         max_records: int = 10000
@@ -113,13 +91,6 @@ class AvroDataExplorer:
         """
         Convert Avro file to CSV format.
         
-        Args:
-            input_file (str): Path to input Avro file
-            output_file (Optional[str]): Path to output CSV file
-            max_records (int): Maximum number of records to convert
-        
-        Returns:
-            List of records in native Python format
         """
         try:
             with open(input_file, 'rb') as avro_file:
@@ -135,53 +106,42 @@ class AvroDataExplorer:
                 # Flatten nested structures for CSV
                 flattened_records = []
                 for record in records:
-                    flattened_record = AvroDataExplorer._flatten_record(record)
+                    flattened_record = self._flatten_record(record)
                     flattened_records.append(flattened_record)
                 
                 # Write to CSV if output specified
-                if output_file:
-                    if flattened_records:
-                        keys = flattened_records[0].keys()
-                        with open(output_file, 'w', newline='') as csvfile:
-                            writer = csv.DictWriter(csvfile, fieldnames=keys)
-                            writer.writeheader()
-                            writer.writerows(flattened_records)
-                        print(f"CSV file saved to {output_file}")
+                if output_file and flattened_records:
+                    keys = flattened_records[0].keys()
+                    with open(output_file, 'w', newline='') as csvfile:
+                        writer = csv.DictWriter(csvfile, fieldnames=keys)
+                        writer.writeheader()
+                        writer.writerows(flattened_records)
+                    print(f"CSV file saved to {output_file}")
                 
                 return flattened_records
         
         except FileNotFoundError:
-            print(f"Error: File not found - {input_file}")
-            sys.exit(1)
+            raise FileNotFoundError(f"File not found: {input_file}")
         except Exception as e:
-            print(f"Error converting Avro to CSV: {e}")
-            sys.exit(1)
+            raise Exception(f"Error converting Avro to CSV: {e}")
     
-    @staticmethod
-    def _flatten_record(record: Dict[str, Any], parent_key: str = '', sep: str = '_') -> Dict[str, Any]:
+    def _flatten_record(self, record: Dict[str, Any], parent_key: str = '', sep: str = '_') -> Dict[str, Any]:
         """
         Recursively flatten nested dictionary.
         
-        Args:
-            record (Dict): Record to flatten
-            parent_key (str): Parent key for nested structures
-            sep (str): Separator for nested keys
-        
-        Returns:
-            Flattened dictionary
         """
         items = {}
         for k, v in record.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
             
             if isinstance(v, dict):
-                items.update(AvroDataExplorer._flatten_record(v, new_key, sep=sep))
+                items.update(self._flatten_record(v, new_key, sep=sep))
             elif isinstance(v, list):
                 # Handle list of dictionaries
                 if v and isinstance(v[0], dict):
                     for i, item in enumerate(v):
                         items.update(
-                            AvroDataExplorer._flatten_record(
+                            self._flatten_record(
                                 item, 
                                 f"{new_key}_{i}", 
                                 sep=sep
@@ -195,16 +155,10 @@ class AvroDataExplorer:
         
         return items
     
-    @staticmethod
-    def run_integrity_checks(file_path: str) -> Dict[str, Any]:
+    def run_integrity_checks(self, file_path: str) -> Dict[str, Any]:
         """
         Perform integrity checks on an Avro file.
         
-        Args:
-            file_path (str): Path to Avro file
-        
-        Returns:
-            Dictionary with integrity check results
         """
         checks = {
             'file_exists': False,
@@ -259,70 +213,35 @@ class AvroDataExplorer:
         
         return checks
 
-def main():
+# Convenience functions to use without instantiating the class
+def inspect_avro(file_path: str) -> Dict[str, Any]:
     """
-    Command-line interface for Avro Data Explorer
+    Inspect an Avro file and return its metadata and schema.
+    
     """
-    parser = argparse.ArgumentParser(
-        description='Avro Data Exploration Tool',
-        epilog='Specify at least one operation (--inspect, --to-json, --to-csv, or --integrity)'
-    )
-    parser.add_argument('file', nargs='?', help='Path to Avro file')
-    parser.add_argument('--inspect', action='store_true', help='Inspect Avro file metadata')
-    parser.add_argument('--to-json', help='Convert Avro to JSON', metavar='OUTPUT_JSON')
-    parser.add_argument('--to-csv', help='Convert Avro to CSV', metavar='OUTPUT_CSV')
-    parser.add_argument('--integrity', action='store_true', help='Run integrity checks')
-    parser.add_argument('--max-records', type=int, default=10000, help='Maximum records to process')
-    
-    # If no arguments are provided, print help and exit
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    
-    args = parser.parse_args()
-    
-    # Check if file is provided
-    if not args.file:
-        print("Error: Avro file path is required.")
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    
-    # Validate that at least one operation is selected
-    if not (args.inspect or args.to_json or args.to_csv or args.integrity):
-        print("Error: Please specify at least one operation (--inspect, --to-json, --to-csv, or --integrity)")
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    
-    # Inspect file
-    if args.inspect:
-        print(json.dumps(
-            AvroDataExplorer.inspect_avro_file(args.file), 
-            indent=2
-        ))
-    
-    # Convert to JSON
-    if args.to_json:
-        records = AvroDataExplorer.convert_avro_to_json(
-            args.file, 
-            args.to_json, 
-            max_records=args.max_records
-        )
-        print(f"Converted {len(records)} records to JSON")
-    
-    # Convert to CSV
-    if args.to_csv:
-        records = AvroDataExplorer.convert_avro_to_csv(
-            args.file, 
-            args.to_csv, 
-            max_records=args.max_records
-        )
-        print(f"Converted {len(records)} records to CSV")
-    
-    # Run integrity checks
-    if args.integrity:
-        checks = AvroDataExplorer.run_integrity_checks(args.file)
-        print(json.dumps(checks, indent=2))
+    explorer = AvroDataExplorer()
+    return explorer.inspect_avro_file(file_path)
 
-if __name__ == '__main__':
-    main()
+def avro_to_json(input_file: str, output_file: Optional[str] = None, max_records: int = 10000) -> List[Dict[str, Any]]:
+    """
+    Convert Avro file to JSON format.
+    
+    """
+    explorer = AvroDataExplorer()
+    return explorer.convert_avro_to_json(input_file, output_file, max_records)
 
+def avro_to_csv(input_file: str, output_file: Optional[str] = None, max_records: int = 10000) -> List[Dict[str, Any]]:
+    """
+    Convert Avro file to CSV format.
+    
+    """
+    explorer = AvroDataExplorer()
+    return explorer.convert_avro_to_csv(input_file, output_file, max_records)
+
+def check_avro_integrity(file_path: str) -> Dict[str, Any]:
+    """
+    Perform integrity checks on an Avro file.
+    
+    """
+    explorer = AvroDataExplorer()
+    return explorer.run_integrity_checks(file_path)
