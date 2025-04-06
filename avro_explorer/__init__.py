@@ -1,4 +1,4 @@
-from .avro_explorer import (
+from .Avro_Data_Exploration_Tool import (
     AvroDataExplorer,
     inspect_avro,
     avro_to_json,
